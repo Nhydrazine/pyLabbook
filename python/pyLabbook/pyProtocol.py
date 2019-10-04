@@ -674,10 +674,9 @@ class pyProtocol(object):
         if method=='killreplace':
             sqrs += s.sql.delete(
                 tablename,
-                pd.DataFrame(
-                    [ df['experiment_id'].unique() ],
-                    columns=['experiment_id']
-                ),
+                pd.DataFrame({
+                    'experiment_id': list(df['experiment_id'].unique()),
+                }),
                 pd.DataFrame(
                     [['experiment_id','TEXT']],
                     columns=['name','type']
