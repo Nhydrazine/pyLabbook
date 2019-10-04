@@ -1,7 +1,0 @@
-set_id,subject,subject_concentration,subject_concentraiton_units,inhibitor,inhibitor_max_concentration,inhibitor_concentration_units,fold_dilution,operator,date,notes
-1,Subject A,20,U/mL,Inhibitor A,20,nM,5,JMW,20190101,"setup by JMW, CKL performed inoculation"
-2,Subject A,20,U/mL,Inhibitor B,50,nM,5,JMW,20190101,"setup by JMW, CKL performed inoculation"
-3,Subject B,20,U/mL,Inhibitor A,20,nM,5,JMW,20190101,"setup by JMW, CKL performed inoculation"
-4,Subject B,20,U/mL,Inhibitor B,50,nM,5,JMW,20190101,"setup by JMW, CKL performed inoculation"
-5,Subject C,20,U/mL,Inhibitor A,20,nM,5,CKL,20190101,
-6,Subject C,20,U/mL,Inhibitor B,50,nM,5,CKL,20190101,
