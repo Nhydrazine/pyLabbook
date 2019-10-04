@@ -4,7 +4,7 @@ import pyLabbook.core as core;
 from pyLabbook.SQLEngines.engine import SQLEngine;
 import pyLabbook.SQLEngines.manager as manager; # import SQL engine manager
 
-class pyLabbook:
+class pyLabbook(object):
     """Parental pyLabbook class.  Contains definitions of a labbook's repository, formats, and database.
 
     Parameters
