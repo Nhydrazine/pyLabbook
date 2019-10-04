@@ -1,6 +1,3 @@
-"""Example script that calculates two-plasmid virus pseudotype transfection
-recipes using the PSEUDOXFR protocol.  Recipes are output to a spreadsheet
-file that can be printed and referenced during the transfection protocol."""
 ################################################################################
 import sys, os, argparse, re;
 import numpy as np, pandas as pd;
@@ -16,7 +13,7 @@ sys.path.append(plbPythonRoot);
 # import core pyLabbook module (see below)
 import pyLabbook.core as core;
 # import the protocol
-import pyLabbook.protocols.PSEUDOXFR;
+import pyLabbook.protocols.TOAD96W;
 ################################################################################
 # parse commandline arguments
 parser = argparse.ArgumentParser();
@@ -76,35 +73,15 @@ except Exception as e:
 
 print("Initializing protocol...");
 # initialize the protocol
-pr = pyLabbook.protocols.PSEUDOXFR.initialize( lb );
+pr = pyLabbook.protocols.TOAD96W.initialize( lb );
 
-print("Calcualting recipes...");
-# specify experiments to calculate recipes for
-eids = pd.DataFrame({'experiment_id' : args.eids});
-
-# connect to database and get sets
 pr.connect();
-sets = pr.selectSetsWhere(eids);
-# calculate and format recipes using custom pyProtocol extension functions
-sams, recipes = pr.formatBioT_TransfectionRecipes(sets);
-# store sample data
-pr.storeSams(sams, method='killreplace');
-# disconnect
+wheres = pd.DataFrame({'experiment_id': args.eids});
+sets = pr.selectSetsWhere(wheres);
+sams = pr.selectSamsWhere(wheres);
 pr.disconnect();
 
-# build output file name
-output_file = args.out;
-if args.format=='csv': output_file += '.csv';
-elif args.format=='xlsx': output_file += '.xlsx';
-else: raise Exception("invalid format");
+pr.workup_merge(sets, sams);
 
-# write
-print("Writing to "+output_file+"...");
-if args.format=='csv':
-    recipes.to_csv(output_file, index=False);
-elif args.format=='xlsx':
-    xw = pd.ExcelWriter(output_file);
-    recipes.to_excel(xw, 'Sheet1', index=False);
-    xw.save();
-    xw.close();
-################################################################################
+
+print("ok");
