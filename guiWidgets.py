@@ -735,7 +735,7 @@ class labbookMaker(tk.Toplevel):
         s.specs['header'] = spec(name='header', default='New Labbook',
             widgetClass=ttk.Label, style=s.styles['header']);
 
-        s.specs['status'] = spec(name='status', default="test status",
+        s.specs['status'] = spec(name='status', default="",
             widgetClass=ttk.Label, style=s.styles['status'],
             packKWA={'anchor': 'w'}
         );
