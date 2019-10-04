@@ -12,11 +12,12 @@ plbRoot=os.path.abspath(
 myroot = os.path.dirname( sys.argv[0] );
 sys.path.append( os.path.join(plbRoot,'python') );
 # import labbook and protocol
-import pyLabbook.labbooks.AldrovandiLabUCLA;
+import pyLabbook.labbooks.LabData;
 import pyLabbook.protocols.PSEUDOXFR;
 ################################################################################
+################################################################################
 # instantiate and initialize labbook and protocol
-lb = pyLabbook.labbooks.AldrovandiLabUCLA.initialize( plbRoot );
+lb = pyLabbook.labbooks.LabData.initialize( plbRoot );
 pr = pyLabbook.protocols.PSEUDOXFR.initialize( lb );
 
 # specify experiments to calculate recipes for
