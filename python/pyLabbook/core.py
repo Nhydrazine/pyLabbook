@@ -1,9 +1,21 @@
-import os, sys, re, shutil;
+import os, sys, re, shutil, importlib;
 import numpy as np, pandas as pd;
 # CORE FUNCTIONS
 sheet_formats = ['xlsx','csv'];
 
 def test(msg): print(str(msg));
+
+def import_module_path(modpath):
+    """Imports a module defined by modpath if not already imported."""
+    if modpath not in sys.modules:
+        importlib.import_module(modpath);
+        return True;
+    else:
+        return False;
+
+def call_module(modpath):
+    """Returns an instance of a module defined by modpath."""
+    return sys.modules[modpath];
 
 def write_dataframe(ffn, format, df, sheet="Sheet1", overwrite=False):
     if not overwrite:
