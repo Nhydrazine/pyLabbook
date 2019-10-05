@@ -183,7 +183,7 @@ class initialize(pyProtocol):
 		----------
 		sets : pandas.DataFrame
 			Set data to workup.
-	    sams : pandas.DataFrame
+		sams : pandas.DataFrame
 			Associated sample data to workup.
 		varianceFormula : bool
 			Use variance formula to propagate error (True) or use avg/stdev of
