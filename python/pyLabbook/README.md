@@ -5,3 +5,6 @@ Contains the `pyLabbook.pyLabbook` class.  A container class that holds informat
 
 ## pyProtocol.py
 Contains the `pyLabbook.pyProtocol` class.  A class that holds information about the structure of protocol-associated data and contains methods used to store and retrieve this information from a labbook's database and repository.  The `pyLabbook.pyProtocol` class itself specifies the **minimal data structure** that is inherited by all protocols.  A **protocol** is an extended `pyLabbook.pyProtocol` object that has its own, modified `setup()` method.  See python/pyLabbook/protocols documentation for more information on how protocols extend this base class.
+
+## core.py
+Contains more *global* style functions and definitions that are not specific to a protocol or labbook.  Also serves as an interface for file system operations.

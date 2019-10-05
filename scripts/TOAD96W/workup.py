@@ -12,8 +12,6 @@ plbPythonRoot = os.path.join(plbRoot,'python');
 sys.path.append(plbPythonRoot);
 # import core pyLabbook module (see below)
 import pyLabbook.core as core;
-# import the protocol
-import pyLabbook.protocols.TOAD96W;
 ################################################################################
 # parse commandline arguments
 parser = argparse.ArgumentParser();
@@ -39,49 +37,33 @@ parser.add_argument(    '--format',
 );
 args = parser.parse_args();
 ################################################################################
-# validate arguments
-# labbook id
-rx = re.compile("^[A-Z,a-z,0-9,\_,\-]+$");
-if not rx.match(args.labbook_id):
-    print(args.labbook_id+" contains invalid characters.");
-    sys.exit();
-# format
+# validate format argument
 if not args.format in ['csv','xlsx']:
     print("invalid format option.");
     sys.exit();
-# experiment ids
+# validate experiment ids length
 if len(args.eids)<1:
     print("no experiment id's specified.");
     sys.exit();
+# validate experiment ids characters
+for eid in args.eids:
+    if not core.validID(eid):
+        print("Invalid experiment id: "+str(eid));
+        sys.exit();
 ################################################################################
 # instantiate and initialize labbook using pyLabbook.core importer
-# first, build a string that reflects the import path: pyLabbook.labbooks.[id]
-labbook_modpath = '.'.join(['pyLabbook','labbooks',args.labbook_id]);
-print("Importing and initializing "+labbook_modpath+"...");
-# try to import if not already imported
-try: core.import_module_path(labbook_modpath);
-except Exception as e:
-    print("Can't import "+args.labbook_id+": "+str(e));
-    sys.exit();
-# instantiate/initialize
-try:
-    lb = core.call_module(labbook_modpath).initialize( plbRoot );
-except Exception as e:
-    print("Can't initialize "+args.labbook_id+": "+str(e));
-    sys.exit();
-# the labbook instance is now stored in lb
+lb = core.import_initialize_labbook(args.labbook_id, plbRoot);
+# instantiate and initialize protocol using pyLabbook.core importer
+pr = core.import_initialize_protocol('TOAD96W', lb);
 
-print("Initializing protocol...");
-# initialize the protocol
-pr = pyLabbook.protocols.TOAD96W.initialize( lb );
-
+# get sets and samples for requested experiment ids
 pr.connect();
 wheres = pd.DataFrame({'experiment_id': args.eids});
 sets = pr.selectSetsWhere(wheres);
 sams = pr.selectSamsWhere(wheres);
 pr.disconnect();
 
+# run workup method
 pr.workup_merge(sets, sams);
-
 
 print("ok");
