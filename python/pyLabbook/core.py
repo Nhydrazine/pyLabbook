@@ -1,6 +1,8 @@
 import os, sys, re, shutil, importlib;
 import numpy as np, pandas as pd;
-"""pyLabbook.core functions primarily serve as an interface to filesystem operations but also include functions that are intended to be globally used and not specifically associated with a labbook or protocol."""
+"""pyLabbook.core functions primarily serve as an interface to filesystem
+operations but also include functions that are intended to be globally used and
+not specifically associated with a labbook or protocol."""
 
 # acceptable sheet formats
 sheet_formats = ['xlsx','csv'];
