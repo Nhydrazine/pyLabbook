@@ -240,14 +240,12 @@ class initialize(pyProtocol):
 
 				where
 
-					Fac is % infection for the C -> INFTY range (subtracted)
-
-					Fab is % infection for the ZERO -> IHFTY range (baselined)
-
-					basline is the subtracted % infection of ZERO sample
+					> Fac is % infection for the C -> INFTY range (subtracted)
+					> Fab is % infection for the ZERO -> INFTY range (baselined)
+					> basline is the subtracted % infection of ZERO sample
 					(also called the baseline infectivity)
 
-					rebase is a conversion factor calculated from raw signal
+					> rebase is a conversion factor calculated from raw signal
 					levels of the INFTY, ZERO and C samples:
 
 						rebase = (INFTY - ZERO)/(INFTY - C)
