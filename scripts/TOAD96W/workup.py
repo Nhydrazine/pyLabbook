@@ -64,6 +64,5 @@ sams = pr.selectSamsWhere(wheres);
 pr.disconnect();
 
 # run workup method
-pr.workup_merge(sets, sams);
-
-print("ok");
+sets, sams = pr.workup(sets, sams);
+print(sets);
