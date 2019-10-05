@@ -224,6 +224,39 @@ class initialize(pyProtocol):
 					average and stdev of baselined infectivity, bound by ZERO
 					and INFTY (so C background is no longer 0).
 
+		Notes
+		-----
+			rebasing
+				Rebasing is the conversion of % infection from a range that goes
+				from sample C to sample INFTY, to a range that goes from sample
+				ZERO to INFTY.  C to INFTY is 'background subtracted' while
+				ZERO to INFTY is baselined, so that the time zero point is
+				0% infection.  This is needed for processes like lognormal CDF
+				fitting, which expects the first data point to be 0.
+
+				Conversion between these ranges is given by the rebase formula:
+
+					Fac = Fab * rebase + baseline
+
+				where
+
+					Fac is % infection for the C -> INFTY range (subtracted)
+
+					Fab is % infection for the ZERO -> IHFTY range (baselined)
+
+					basline is the subtracted % infection of ZERO sample
+					(also called the baseline infectivity)
+
+					rebase is a conversion factor calculated from raw signal
+					levels of the INFTY, ZERO and C samples:
+
+						rebase = (INFTY - ZERO)/(INFTY - C)
+
+				Most often, rebase ~ 1 meaning that the subtracted range and the
+				baselined range are nearly the same.  This also coincides with
+				the normalized % infection of sample ZERO being very close to
+				0%, indicating a nearly perfect baseline infectivity.
+
 		"""
 		if varianceFormula:
 			return s.workup_varianceFormula(sets, sams);
@@ -414,11 +447,6 @@ class initialize(pyProtocol):
 					np.divide(ss['_sub_avg'], norm['_sub_avg'])
 				);
 			# baseline
-			# this is used for fitting.  Baseline'd values are adjusted so that
-			# infection at time ZERO is true 0%, which is expected by some
-			# fitting methods like lognormal.  This gives a baseline and a
-			# rebase factor for adjusting back, when plotting.
-			# first calculate percent infection baseline (at time ZERO)
 			ss = sams[sams['_esid']==esid]; # updated sample subset
 			base = ss[ss['sample_id']=='ZERO'].iloc[0];
 			sets.loc[r.name, ['_baseline_avg','_baseline_std']] = \
@@ -437,9 +465,6 @@ class initialize(pyProtocol):
 						ss['_raw_avg'][ss['sample_id']=='C'].iloc[0]
 					),
 				);
-			# so that Fac = Fab * rebase + baseline
-			# where Fac is % infection with cell control at zero
-			# and Fab is % infection with t0 at zero
 		return (
 			sets[['experiment_id','set_id']+set_cols],
 			sams[['experiment_id','set_id','sample_id','replicate']+sam_cols]
