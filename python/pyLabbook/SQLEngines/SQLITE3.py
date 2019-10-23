@@ -198,6 +198,7 @@ class engine(SQLEngine):
         """Returns SQR(s) for inserting a pandas.DataFrame into a table.  This also serves UPDATE functionalsity via. overwriting the existing data with overwrite=True."""
         # convert values DataFrame to list of lists of native python types
         values = s.nativetype( data, desc );
+
         # get list of field names in order
         fields = [ s.hq(f) for f in desc['name'] ];
         if method=='none': method_cmd = "";

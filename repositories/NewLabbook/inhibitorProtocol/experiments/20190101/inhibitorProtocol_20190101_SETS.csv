@@ -1,0 +1,3 @@
+set_id,subject,subject_concentration,subject_concentraiton_units,inhibitor,inhibitor_max_concentration,inhibitor_concentration_units,fold_dilution,operator,date,notes
+1,a,50,mg,inhibitor,100,mg,5,nic,20190101,
+2,b,50,mg,inhibitor,100,mg,5,nic,20190101,

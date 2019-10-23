@@ -332,13 +332,34 @@ class pyProtocol(object):
         # load valid properties from kwargs to pandas.Series
         r = pd.Series(s._descColumns);
         valid = r.index.tolist();
+
+
+
         for k in kwargs.keys():
             if k not in valid: raise Exception("Invalid keyword");
+            # keywords that can't be null
+            if not k in ['description','default']:
+                if kwargs[k]=="":
+                    raise Exception("'"+k+"' cannot be empty");
+                if kwargs[k]==None:
+                    raise Exception("'"+k+"' cannot be empty");
+                if kwargs[k]==np.nan:
+                    raise Exception("'"+k+"' cannot be empty");
+            # data type options
+            if k=='type':
+                if not kwargs[k] in s.sql.dmap.keys():
+                    raise Exception("invalid data type '"+str(kwargs[k])+"'");
+
             r[k] = kwargs[k];
+
         # append to set or sample description pandas.DataFrame
         if setsam=='SET':
+            if kwargs['name'] in s._SETDESC['name'].tolist():
+                raise Exception("name '"+kwargs['name']+"' is a duplicate");
             s._SETDESC = s._SETDESC.append(r, ignore_index=True);
         elif setsam=='SAM':
+            if kwargs['name'] in s._SAMDESC['name'].tolist():
+                raise Exception("name '"+kwargs['name']+"' is a duplicate");
             s._SAMDESC = s._SAMDESC.append(r, ignore_index=True);
 
     def addSetColumn(s,**kwargs):
@@ -712,10 +733,9 @@ class pyProtocol(object):
             if len(samdf)>0:
                 sqrs += s.sql.delete(
                     s.samTableName(),
-                    pd.DataFrame(
-                        [ samdf['experiment_id'].unique() ],
-                        columns=['experiment_id']
-                    ),
+                    pd.DataFrame({
+                        'experiment_id': samdf['experiment_id'].unique()
+                    }),
                     pd.DataFrame(
                         [['experiment_id','TEXT']],
                         columns=['name','type']
@@ -724,16 +744,15 @@ class pyProtocol(object):
             if len(setdf)>0:
                 sqrs += s.sql.delete(
                     s.setTableName(),
-                    pd.DataFrame(
-                        [ setdf['experiment_id'].unique() ],
-                        columns=['experiment_id']
-                    ),
+                    pd.DataFrame({
+                        'experiment_id': setdf['experiment_id'].unique()
+                    }),
                     pd.DataFrame(
                         [['experiment_id','TEXT']],
                         columns=['name','type']
                     )
                 );
-        method='replace';
+            method='replace';
         if len(setdf)>0:
             sqrs += s.sql.insert(
                 s.setTableName(),
@@ -748,6 +767,7 @@ class pyProtocol(object):
                 s.samDesc(),
                 method=method,
             );
+
         s.sql.execute(sqrs, transaction=transaction);
 
     #---------------------------------------------------------------------------
@@ -792,7 +812,11 @@ class pyProtocol(object):
         );
         # delete samples first in accord with foreign keys
         s.sql.execute(sqr_sam + sqr_set);
-
+    ############################################################################
+    def dropSetSampleTables(s):
+        sqr = s.sql.drop_table( s.samTableName() );
+        sqr += s.sql.drop_table( s.setTableName() );
+        s.sql.execute(sqr);
     ############################################################################
     # PATH CREATORS AND CHECKERS FOR WHOLE PROTOCOL
     ############################################################################
@@ -849,7 +873,7 @@ class pyProtocol(object):
         """Initialize an experiment with id eid, may overwrite if it exists
         (overwrite=True), which will delete all existing repository files for
         the experiment before writing over with empty ones, otherwise raises.
-        INitialization means creating the repository folders and writing empty
+        Initialization means creating the repository folders and writing empty
         set and sample spreadsheet files.  Returns None."""
 
         eid = s.testID(eid);
@@ -972,20 +996,24 @@ class pyProtocol(object):
             elif setsam=='SAM': top = "\t\ts.addSamColumn(";
             else: raise Exception("invalid setsam for formatrow()");
 
+            if r['type'] not in s.sql.dmap.keys():
+                raise Exception("invalid data type '"+str(r['type'])+"'");
+
             dt = s.sql.dmap[r['type']]['py'];
             if pd.isnull(r['default']): dv = "None";
+
             else:
                 if dt==str: dv = qq(r['default']);  # quote if string type
                 else: dv = r['default'];            # otherwise bare
             rb = [
                 top,
-                "\t\t\tname\t\t\t= " + qq(r['name']) + ",",
-                "\t\t\ttype\t\t\t= " + qq(r['type']) + ",",
-                "\t\t\tnotnull\t\t\t= " + str(r['notnull']) + ",",
-                "\t\t\tunique\t\t\t= " + str(r['unique']) + ",",
-                "\t\t\tdescription\t\t= " + qq(r['description']) + ",",
-                "\t\t\tdefault\t\t\t= " + dv + ",",
-                "\t\t\tprimary_key\t\t= " + str(r['primary_key']) + ",",
+                "\t\t\tname          = " + qq(r['name']) + ",",
+                "\t\t\ttype          = " + qq(r['type']) + ",",
+                "\t\t\tnotnull       = " + str(r['notnull']) + ",",
+                "\t\t\tunique        = " + str(r['unique']) + ",",
+                "\t\t\tdescription   = " + qq(r['description']) + ",",
+                "\t\t\tdefault       = " + dv + ",",
+                "\t\t\tprimary_key   = " + str(r['primary_key']) + ",",
                 "\t\t);",
             ];
             return rb;
@@ -1003,8 +1031,7 @@ class pyProtocol(object):
             buff += formatrow(r,setsam='SET');
         for i,r in samdesc.iterrows():
             buff += formatrow(r,setsam='SAM');
-
-        return "\n".join(buff);
+        return "\n".join(buff).replace("\t","    ");
 ################################################################################
     def setTableExists(s):
         """Does the set table for this protocol exist in labbook? True or

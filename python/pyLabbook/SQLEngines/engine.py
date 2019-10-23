@@ -214,6 +214,10 @@ class SQLEngine():
         # Return None for null pandas types
         if pd.isnull(v):
             return None;
+        # and for empty strings
+        if s.dmap[t]['py']==str and v=="":
+            return None;
+        # if we make it here then it's not a null-like value
         if t in list(s.dmap.keys()):
             # cast value by passing it to the native python datatype function reference in dmap.
             try: cast_value = s.dmap[t]['py'](v);

@@ -1,0 +1,5 @@
+set_id,subject,inhibitor,max_concentration
+1,a,inhibitor,10
+2,b,inhibitor,10
+3,c,inhibitor,101
+4,d,inhibitor,10

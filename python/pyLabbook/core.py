@@ -65,6 +65,44 @@ def import_initialize_labbook(labbook_id, root):
         raise Exception("Couldn't initialize "+mp+": "+str(e));
     return None;
 
+def import_protocol(protocol_id):
+    if not validID(protocol_id):
+        raise Exception("id '"+protocol_id+"' has invalid characters");
+    modpath = '.'.join(['pyLabbook','protocols',protocol_id]);
+    try:
+        imported = import_module_path(modpath);
+    except Exception as e:
+        raise Exception("couldn't import "+modpath+": "+str(e));
+    if not imported:
+        raise Exception(modpath+" is not in system module path");
+    return True;
+
+def initialize_protocol(protocol_id, labbook):
+    modpath = '.'.join(['pyLabbook','protocols',protocol_id]);
+    try: return call_module(modpath).initialize(labbook);
+    except Exception as e:
+        raise Exception("Couldn't initialize "+modpath+": "+str(e));
+    return None;
+
+def import_labbook(labbook_id):
+    if not validID(labbook_id):
+        raise Exception("id '"+labbook_id+"' has invalid characters");
+    modpath = '.'.join(['pyLabbook','labbooks',labbook_id]);
+    try:
+        imported = import_module(modpath);
+    except Exception as e:
+        raise Exception("couldn't import "+modpath+": "+str(e));
+    if not import_module_path(modpath):
+        raise Exception(modpath+" is not in system module path");
+    return True;
+
+def initialize_labbook(labbook_id, plbRoot):
+    modpath = '.'.join(['pyLabbook','labbooks',protocol_id]);
+    try: return call_module(modpath).initialize(plbRoot);
+    except Exception as e:
+        raise Exception("Couldn't initialize "+modpath+": "+str(e));
+    return None;
+
 def import_module_path(modpath):
     """Imports a module defined by modpath if not already imported."""
     if modpath not in sys.modules:
