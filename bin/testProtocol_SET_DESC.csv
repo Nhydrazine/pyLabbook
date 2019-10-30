@@ -1,3 +1,0 @@
-name,type,notnull,unique,description,default,primary_key
-name,TEXT,TRUE,FALSE,,,FALSE
-dsa,REAL,FALSE,FALSE,,,FALSE

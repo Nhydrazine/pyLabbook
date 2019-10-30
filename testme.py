@@ -1,113 +1,196 @@
+core_modules = {
+    "re"        : [],
+    "shutil"    : [],
+    "numpy"     : [],
+    "sqlite3"   : [],
+    "xlrd"      : [],
+    "openpyxl"  : [],
+    "pandas"    : [0,24],
+};
+# pandas 0.24.0 or above is now REQUIRED due to NULL string problems with
+# loading Excel files.  See https://github.com/pandas-dev/pandas/issues/20377
+
+class ansi:
+    black       = "\033[0;30m";
+    red         = "\033[0;31m";
+    green       = "\033[0;32m";
+    brown       = "\033[0;33m";
+    blue        = "\033[0;34m";
+    magenta     = "\033[0;35m";
+    cyan        = "\033[0;36m";
+    br_gray     = "\033[0;37m";
+    dk_gray     = "\033[1;30m";
+    br_red      = "\033[1;31m";
+    br_green    = "\033[1;32m";
+    yellow      = "\033[1;33m";
+    br_blue     = "\033[1;34m";
+    br_magenta  = "\033[1;35m";
+    br_cyan     = "\033[1;36m";
+    br_white    = "\033[1;37m";
+    bold        = "\033[1m";
+    faint       = "\033[2m";
+    italic      = "\033[3m";
+    underline   = "\033[4m";
+    blink       = "\033[5m";
+    invert      = "\033[7m";
+    clear       = "\033[0m";
+def prompt_yesno(msg, default='y', tries=3):
+    pt = "[";
+    if default=="y": pt += ansi.green+"Y"+ansi.clear;
+    else: pt += "y";
+    pt += "/";
+    if default=="n": pt += ansi.green+"N"+ansi.clear;
+    else: pt += "n";
+    pt += "] ?";
+    for current_try in range(0,tries):
+        print(msg+" "+pt+" ", end='', flush=True);
+        response = input();
+        if 'Y' in response.upper() and 'N' not in response.upper():
+            return True;
+        if 'N' in response.upper() and 'Y' not in response.upper():
+            return False;
+    raise Exception("Error: maximum attempts for an acceptable reponse was reached.");
+def prompt(msg, options, default="", tries=3,tag=ansi.br_blue+"-> "+ansi.clear):
+    ptopts = [];
+    for opt in options:
+        if opt==default: ptopts.append(ansi.green+opt.upper()+ansi.clear);
+        else: ptopts.append(opt);
+    for current_try in range(0,tries):
+        print(tag+msg+" ["+'/'.join(ptopts)+"] ? ", end="", flush=True);
+        response = input().replace("\n","");
+        if response=="" and default!="": return default;
+        if response in options: return response.lower();
+    raise Exception("Error: maximum attempts for an acceptable reponse was reached.");
+def printwarn(msg): print("("+ansi.br_magenta+"WARNING"+ansi.clear+") "+msg);
+def printtest(module, len=40):
+    print((module+ansi.dk_gray+" ").ljust(len,'.')+ansi.clear+' ',
+        end='',flush=True);
+def printok(): print(ansi.green+"OK"+ansi.clear);
+def printerr(err):
+    print(ansi.br_red+"ERROR"+" "+ansi.clear+err);
+def printmissing(module):
+    print(ansi.red+" Install the "+ansi.br_red+module+ansi.red+" module."+ansi.clear);
 # python #######################################################################
-try:
-    import sys;
-    print("sys ".ljust(40,'.')+" OK");
-    print("python ".ljust(40,".")+" "+
-        '.'.join([str(v) for v in sys.version_info[0:3]])
-    );
-    if sys.version_info[0]<3 and sys.version_info[1]<6 and sys.version[2]<5:
-        print("python 3.6.5+ is required.");
-        sys.exit();
+print("Checking core modules and python");
+printtest("sys");
+try: import sys;
 except Exception as e:
-    print("Can't import sys: "+str(e));
+    printerr(str(e));
     sys.exit();
+printok();
+
+# python version
+printtest("python");
+if sys.version_info[0]<3 and sys.version_info[1]<6 and sys.version[2]<5:
+    print(ansi.red+"Python 3.6.5+ is required."+ansi.clear);
+    sys.exit();
+print(ansi.green+'.'.join([str(v) for v in sys.version_info[0:3]])+ansi.clear);
+
+printtest("os");
+try: import os;
+except Exception as e:
+    printerr(str(e));
+    sys.exit();
+printok();
+
+printtest("importlib");
+try: import importlib;
+except Exception as e:
+    printerr(str(e));
+    sys.exit();
+printok();
+
 # everyone #####################################################################
-versionerrors = [];
-print();
-print("Checking for Required Modules");
-try:
-    import os;
-    print("os ".ljust(40,'.')+" OK");
-except Exception as e:
-    print("Can't import os: "+str(e));
+def test_module_import(name):
+    try:
+        importlib.import_module(name);
+    except Exception as e:
+        return str(e);
+    return None;
 
-try:
-    import re;
-    print("re ".ljust(40,'.')+" OK");
-except Exception as e:
-    print("Can't import re: "+str(e));
+# test core modules ############################################################
+def test_modules(mods):
+    errs = 0;
+    for k in mods.keys():
+        printtest(k);
+        err = test_module_import(k);
+        if err:
+            printerr(err);
+            errs+=1;
+            continue;
+        else:
+            # version required?
+            if len(mods[k])>0:
+                vsp = sys.modules[k].__version__.split('.');
+                bad_version = False;
+                for i,v in enumerate(mods[k]):
+                    if v!=None:
+                        if int(vsp[i])<int(mods[k][i]):
+                            bad_version = True;
+                            break;
+                if bad_version:
+                    print(  ansi.red+'.'.join(vsp)+ansi.clear+
+                            " - version "+'.'.join([str(v) for v in mods[k]])+" or above"+
+                            " is required."
+                    );
+                    errs += 1;
+                    continue;
+                else:
+                    print(  ansi.green+'.'.join(vsp)+ansi.clear);
+            else: print(ansi.green+"OK"+ansi.clear);
+    return errs;
 
-try:
-    import shutil;
-    print("shutil ".ljust(40,'.')+" OK");
-except Exception as e:
-    print("Can't import shutil: "+str(e));
-
-try:
-    import numpy as np;
-    print("numpy ".ljust(40,'.')+" OK");
-except Exception as e:
-    print("Can't import numpy: "+str(e));
-
-try:
-    import pandas as pd;
-    print("pandas ".ljust(40,'.')+" OK");
-except Exception as e:
-    print("Can't import pandas: "+str(e));
-vsp = pd.__version__.split('.');
-if int(vsp[0])==0 and int(vsp[1])<24:
-    versionerrors.append(
-        "update pandas to version 0.24.0 or higher");
-
-try:
-    import sqlite3;
-    print("sqlite3 ".ljust(40,'.')+" OK");
-except Exception as e:
-    print("Can't import sqlite3: "+str(e));
-
-try:
-    import xlrd;
-    print("xlrd ".ljust(40,'.')+" OK");
-except Exception as e:
-    print("Can't import xlrd: "+str(e));
-
-try:
-    import openpyxl;
-    print("openpyxl ".ljust(40,'.')+" OK");
-except Exception as e:
-    print("Can't import openpyxl: "+str(e));
+errs = 0;
+errs += test_modules( core_modules );
 
 # manager ######################################################################
 print();
-print("Checking for Manager Modules");
+print("Checking for manager modules");
+
 try:
+    printtest("tkinter");
     import tkinter as tk;
-    print("tkinter ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import tkinter: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("tkinter.messagebox");
     from tkinter import messagebox;
-    print("tkinter.messagebox ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import tkinter.messagebox: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("tkinter.scrolledtext");
     from tkinter import scrolledtext;
-    print("tkinter.scrolledtext ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import tkinter.scrolledtext: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("tkinter.filedialog");
     from tkinter import filedialog;
-    print("tkinter.filedialog ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import tkinter.filedialog: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("tkinter.ttk");
     from tkinter import ttk;
-    print("tkinter.ttk ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import tkinter.ttk: "+str(e));
+    printerr(str(e));
 
 # manager widgets ##############################################################
 print();
-print("Checking for Manager Widgets");
+print("Checking for manager widgets");
 try:
+    printtest("guiWidgets");
     import guiWidgets;
-    print("guiWidgets ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import guiWidgets: "+str(e));
+    printerr(str(e));
 
 w = {};
 tkerrs = [];
@@ -118,38 +201,46 @@ except Exception as e:
     skip=True;
 if not skip:
     try:
+        printtest("ttk.Frame");
         w['frame'] = ttk.Frame(w['tk']);
-        print("ttk.Frame ".ljust(40,'.')+" OK");
-    except Exception as e: print("ttk.Frame ".ljust(40,'.')+" "+str(e));
+        printok();
+    except Exception as e: printerr(str(e));
     try:
+        printtest("ttk.Label");
         w['label'] = ttk.Label(w['tk']);
-        print("ttk.Label ".ljust(40,'.')+" OK");
-    except Exception as e: print("ttk.Label ".ljust(40,'.')+" "+str(e));
+        printok();
+    except Exception as e: printerr(str(e));
     try:
+        printtest("ttk.Entry");
         w['entry'] = ttk.Entry(w['tk']);
-        print("ttk.Entry ".ljust(40,'.')+" OK");
-    except Exception as e: print("ttk.Entry ".ljust(40,'.')+" "+str(e));
+        printok();
+    except Exception as e: printerr(str(e));
     try:
+        printtest("ttk.Button");
         w['button'] = ttk.Button(w['tk']);
-        print("ttk.Button ".ljust(40,'.')+" OK");
-    except Exception as e: print("ttk.Button ".ljust(40,'.')+" "+str(e));
+        printok();
+    except Exception as e: printerr(str(e));
     try:
+        printtest("ttk.CheckButton");
         w['checkbutton'] = ttk.Checkbutton(w['tk']);
-        print("ttk.Checkbutton ".ljust(40,'.')+" OK");
-    except Exception as e: print("ttk.Checkbutton ".ljust(40,'.')+" "+str(e));
+        printok();
+    except Exception as e: printerr(str(e));
     try:
+        printtest("ttk.Combobox");
         w['combobox'] = ttk.Combobox(w['tk']);
-        print("ttk.Combobox ".ljust(40,'.')+" OK");
-    except Exception as e: print("ttk.Combobox ".ljust(40,'.')+" "+str(e));
+        printok();
+    except Exception as e: printerr(str(e));
     try:
+        printtest("ttk.Treeview");
         w['treeview'] = ttk.Treeview(w['tk']);
-        print("ttk.Treeview ".ljust(40,'.')+" OK");
-    except Exception as e: print("ttk.Treeview ".ljust(40,'.')+" "+str(e));
-# pyLabbook structure ##########################################################
+        printok();
+    except Exception as e: printerr(str(e));
 
+# pyLabbook structure ##########################################################
 plbRoot = os.path.abspath( os.path.dirname( sys.argv[0] ) );
 print();
-print("Checking pyLabbook distribution at "+plbRoot);
+print("Checking pyLabbook distribution at "+ansi.cyan+plbRoot+ansi.clear);
+
 plbPythonRoot = os.path.join( plbRoot, 'python' );
 plbLabbookRoot = os.path.join( plbPythonRoot, 'pyLabbook', 'labbooks' );
 plbProtocolRoot = os.path.join( plbPythonRoot, 'PyLabbook', 'protocols' );
@@ -158,99 +249,197 @@ plbRepositories = os.path.join( plbRoot, 'repositories' );
 plbExports = os.path.join( plbRoot, 'exports' );
 plbImports = os.path.join( plbRoot, 'imports' );
 
-print(plbLabbookRoot + " ", end='', flush=True);
-if not os.path.isdir(plbLabbookRoot): print(" MISSING");
-else: print(" OK");
-print(plbProtocolRoot + " ", end='', flush=True);
-if not os.path.isdir(plbProtocolRoot): print(" MISSING");
-else: print(" OK");
-print(plbDatabases + " ", end='', flush=True);
-if not os.path.isdir(plbDatabases): print(" MISSING");
-else: print(" OK");
-print(plbRepositories + " ", end='', flush=True);
-if not os.path.isdir(plbRepositories): print(" MISSING");
-else: print(" OK");
-print(plbExports + " ", end='', flush=True);
-if not os.path.isdir(plbExports): print(" MISSING");
-else: print(" OK");
-print(plbImports + " ", end='', flush=True);
+printtest(plbLabbookRoot, len=70);
+if not os.path.isdir(plbLabbookRoot): printerr(" MISSING");
+else: printok();
+printtest(plbProtocolRoot, len=70);
+if not os.path.isdir(plbProtocolRoot): printerr(" MISSING");
+else: printok();
+printtest(plbDatabases, len=70);
+if not os.path.isdir(plbDatabases): printerr(" MISSING");
+else: printok();
+printtest(plbRepositories, len=70);
+if not os.path.isdir(plbRepositories): printerr(" MISSING");
+else: printok();
+printtest(plbExports, len=70);
+if not os.path.isdir(plbExports): printerr(" MISSING");
+else: printok();
+printtest(plbImports, len=70);
 if not os.path.isdir(plbImports): print(" MISSING");
-else: print(" OK");
+else: printok();
 
 plbPyLabbookClass = os.path.join(plbPythonRoot,"pyLabbook","pyLabbook.py");
 plbPyProtocolClass = os.path.join(plbPythonRoot,"pyLabbook","pyProtocol.py");
 plbPyLabbookCore = os.path.join(plbPythonRoot,"pyLabbook","core.py");
 plbOps = os.path.join(plbPythonRoot,"operations.py");
 
-print(plbPyLabbookClass + " ", end='', flush=True);
-if not os.path.isfile(plbPyLabbookClass): print(" MISSING");
-else: print(" OK");
+printtest(plbPyLabbookClass, len=70);
+if not os.path.isfile(plbPyLabbookClass): printerr(" MISSING");
+else: printok();
 
-print(plbPyLabbookClass + " ", end='', flush=True);
-if not os.path.isfile(plbPyLabbookClass): print(" MISSING");
-else: print(" OK");
+printtest(plbPyLabbookCore, len=70);
+if not os.path.isfile(plbPyLabbookCore): printerr(" MISSING");
+else: printok();
 
-print(plbPyLabbookCore + " ", end='', flush=True);
-if not os.path.isfile(plbPyLabbookCore): print(" MISSING");
-else: print(" OK");
+printtest(plbOps, len=70);
+if not os.path.isfile(plbOps): printerr(" MISSING");
+else: printok();
 
-print(plbPyLabbookCore + " ", end='', flush=True);
-if not os.path.isfile(plbPyLabbookCore): print(" MISSING");
-else: print(" OK");
-
-print(plbOps + " ", end='', flush=True);
-if not os.path.isfile(plbOps): print(" MISSING");
-else: print(" OK");
 # pyLabbook imports ############################################################
 print();
 print("Checking pyLabbook modules and classes");
 sys.path.append( plbPythonRoot );
 try:
+    printtest("pyLabbook");
     import pyLabbook;
-    print("pyLabbook ".ljust(40,'.')+" "+
-        '.'.join([str(v) for v in pyLabbook.__version__]));
+    printok();
 except Exception as e:
-    print("Can't import pyLabbook: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("pyLabbook.pyLabbook");
     from pyLabbook import pyLabbook;
-    print("pyLabbook.pyLabbook ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import pyLabbook.pyLabbook: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("pyLabbook.pyProtocol");
     from pyLabbook import pyProtocol;
-    print("pyLabbook.pyProtocol ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import pyLabbook.pyProtocol: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("pyLabbook.core");
     from pyLabbook import core;
-    print("pyLabbook.core ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import pyLabbook.core: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("pyLabbook.SQLEngines.engine");
     from pyLabbook.SQLEngines import engine;
-    print("pyLabbook.SQLEngines.engine ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import pyLabbook.SQLEngines.engine: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("pyLabbook.SQLEngines.manager");
     from pyLabbook.SQLEngines import manager;
-    print("pyLabbook.SQLEngines.manager ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't import pyLabbook.SQLEngines.manager: "+str(e));
+    printerr(str(e));
 
 try:
+    printtest("SQLITE3 engine");
     sql = manager.loadSQLEngine('SQLITE3');
-    print("SQLITE3 engine ".ljust(40,'.')+" OK");
+    printok();
 except Exception as e:
-    print("Can't load SQLITE3 engine: "+str(e));
+    printerr(str(e));
+
+# pyLabbook functions
+print();
+print("Testing pyLabbook system");
+
+try:
+    printtest("Instantiating labbook");
+    lb = pyLabbook(
+        id              = 'testLabbook',
+        root            = plbRoot,
+        repositoryPath  = os.path.join(plbRepositories,'testLabbook'),
+        sheetFormat     = 'csv',
+        databasePath    = 'databases',
+        databaseFile    = 'testLabbook.sqlite3',
+        databaseFormat  = 'SQLITE3',
+    );
+    printok();
+except Exception as e: printerr(str(e));
+
+try:
+    lb_modfile = os.path.join(plbLabbookRoot,'testLabbook.py');
+    printtest("Serializing");
+    with open(lb_modfile,'w') as fh:
+        fh.write(lb.exportSerialized());
+    printok();
+except Exception as e:
+    printerr(str(e));
+
+try:
+    printtest("Importing");
+    lb = core.import_initialize_labbook('testLabbook', plbRoot);
+    print(ansi.green+lb.id+ansi.clear);
+except Exception as e:
+    printerr(str(e));
+
+try:
+    printtest("Repository");
+    lb.createFileStructure();
+    if not os.path.isdir( os.path.join(lb.root, lb.repositoryPath) ):
+        raise Exception("Not found");
+    printok();
+except Exception as e:
+    printerr(str(e));
+
+try:
+    printtest("Creating sample protocol");
+    pr = pyProtocol(lb);
+    pr.PROTOCOLID = 'testProtocol';
+    pr.addSetColumn(
+        name          = "set_name",
+        type          = "TEXT",
+        notnull       = False,
+        unique        = False,
+        description   = "name of the set",
+        default       = None,
+        primary_key   = False,
+    );
+    pr.addSamColumn(
+        name          = "sam_name",
+        type          = "TEXT",
+        notnull       = False,
+        unique        = False,
+        description   = "name of the sample",
+        default       = None,
+        primary_key   = False,
+    );
+    printok();
+except Exception as e:
+    printerr(str(e));
+
+try:
+    printtest("Serializing");
+    pr_modfile = os.path.join(plbProtocolRoot,'testProtocol.py');
+    with open(pr_modfile, 'w') as fh:
+        fh.write(pr.exportSerialized());
+    printok();
+except Exception as e:
+    printerr(str(e));
+
+try:
+    printtest("Importing");
+    pr = core.import_initialize_protocol('testProtocol', lb);
+    print(ansi.green+pr.PROTOCOLID+ansi.clear);
+except Exception as e:
+    printerr(str(e));
+
+try:
+    printtest("Database");
+    pr.connect();
+    pr.disconnect();
+    printok();
+except Exception as e:
+    printerr(str(e));
+
+try:
+    printtest("Cleaning up");
+    lb.deleteFileStructure(require_empty=False);
+    os.remove( lb_modfile );
+    os.remove( pr_modfile );
+    printok();
+except Exception as e:
+    printerr(str(e));
 
 # versionerrors ################################################################
-if len(versionerrors)>0:
-    print("Warning: you may experience some odd behavior realted to:");
-    print("--> " + "\n".join(versionerrors));
 ################################################################################
 print("Done");

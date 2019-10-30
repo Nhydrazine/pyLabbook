@@ -151,7 +151,7 @@ def write_dataframe(ffn, format, df, sheet="Sheet1", overwrite=False):
     else:
         raise Exception("Unrecognized format " + str(format));
 
-def load_dataframe(ffn, format, sheet="Sheet1"):
+def load_dataframe(ffn, format, desc={}, sheet="Sheet1"):
     """Loads a spreadsheet file into a pandas.DataFrame.
 
     Parameters
@@ -160,6 +160,8 @@ def load_dataframe(ffn, format, sheet="Sheet1"):
         Full path and name of spreadsheet file to import
     format : str
         'xlsx' or 'csv' for file format.
+    desc : dict
+        Optional 'column': data type dict for data conversion.
     sheet : str
         Name of sheet to import (for xlsx).  Default "Sheet1".
 
@@ -171,6 +173,7 @@ def load_dataframe(ffn, format, sheet="Sheet1"):
     """
     if not os.path.isfile(ffn):
         raise Exception("Can't find " + str(ffn));
+
     if format=='xlsx':
         # use pandas ExcelFile
         xl = pd.ExcelFile(ffn);
@@ -178,10 +181,10 @@ def load_dataframe(ffn, format, sheet="Sheet1"):
             xl.close();
             raise Exception(
                 "Can't find sheet " + str(sheet) + " in file " + str(ffn));
-        df = xl.parse(sheet, index_col=None);
+        df = xl.parse(sheet, index_col=None, dtype=desc);
         return df;
     elif format=='csv':
-        df = pd.read_csv(ffn, index_col=None);
+        df = pd.read_csv(ffn, dtype=desc, index_col=None);
         return df;
     else:
         raise Exception("Unrecognized format " + str(format));

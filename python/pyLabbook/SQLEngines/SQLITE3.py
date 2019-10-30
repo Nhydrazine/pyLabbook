@@ -8,11 +8,11 @@ class engine(SQLEngine):
         s.dbh = None;
         # data types map
         s.dmap = {
-            'TEXT'      : {'py': str,   'db': 'TEXT'},
-            'NUMERIC'   : {'py': float, 'db': 'NUMERIC'},
-            'DATE'      : {'py': str,   'db': 'TEXT'},
-            'INTEGER'   : {'py': int,   'db': 'INTEGER'},
-            'REAL'      : {'py': float, 'db': 'REAL'},
+            'TEXT'      : {'py': str,        'db': 'TEXT'},
+            'NUMERIC'   : {'py': np.float64, 'db': 'NUMERIC'},
+            'DATE'      : {'py': str,        'db': 'TEXT'},
+            'INTEGER'   : {'py': np.int32,   'db': 'INTEGER'},
+            'REAL'      : {'py': np.float64, 'db': 'REAL'},
         };
         # supported test operations
         s.ops = ['=','!=','>','>=','<','<=','like','in'];

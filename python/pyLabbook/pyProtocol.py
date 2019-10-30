@@ -400,9 +400,15 @@ class pyProtocol(object):
                 desc = s.samDesc();
                 empty = s.getEmptySams();
             else: raise Exception("invalid setsam type.");
+            # build types for conversion on load
+            dtypes = {};
+            for i,c in desc.iterrows():
+                dtypes[c['name']] = s.sql.dmap[ c['type'] ]['py'];
+
             # load
             df = core.load_dataframe(
                     ffn,
+                    desc=dtypes,
                     format=s.pyLabbook.sheetFormat,
                     sheet=sheet
             );
@@ -952,11 +958,13 @@ class pyProtocol(object):
             # force type and handle NaN's
             if t==str:
                 # string NaN converted to '' instead of 'nan'
-                df[r['name']] = df[r['name']].fillna('').astype(t);
+                df[r['name']] = df[r['name']].replace(np.nan, '');
+                df[r['name']] = df[r['name']].fillna('');
             else:
                 # numeric NaN are okay
                 try:
-                    df[r['name']] = df[r['name']].fillna(np.nan).replace('',np.nan).astype(t);
+                    df[r['name']] = \
+                    df[r['name']].fillna(np.nan).replace('',np.nan).astype(t);
                 except: pass;
                 # integer NaN are also not valid...
         return df;
