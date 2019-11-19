@@ -1,5 +1,5 @@
 # pyLabbook Project
- 
+
 The goal of the pyLabbook project is to provide free, transparent and open source tools that scientists can use to manage and process their data.  
 
 pyLabbook achieves this goal as a python-based, minimal data management system (mDMS).  This system is designed to be extended by individual scientists and small to medium sized laboratories with data structures and methods that are relevant their research.
