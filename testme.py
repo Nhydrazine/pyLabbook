@@ -243,7 +243,7 @@ print("Checking pyLabbook distribution at "+ansi.cyan+plbRoot+ansi.clear);
 
 plbPythonRoot = os.path.join( plbRoot, 'python' );
 plbLabbookRoot = os.path.join( plbPythonRoot, 'pyLabbook', 'labbooks' );
-plbProtocolRoot = os.path.join( plbPythonRoot, 'PyLabbook', 'protocols' );
+plbProtocolRoot = os.path.join( plbPythonRoot, 'pyLabbook', 'protocols' );
 plbDatabases = os.path.join( plbRoot, 'databases' );
 plbRepositories = os.path.join( plbRoot, 'repositories' );
 plbExports = os.path.join( plbRoot, 'exports' );
