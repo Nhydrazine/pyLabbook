@@ -142,7 +142,7 @@ pr.connect();
 
 # custom selection for export of kinetic manuscript data
 # get all experiment ids for appropriate sets
-wheres = "WHERE cell_type='TZM-BL' and temperature=37";
+wheres = "WHERE cell_type='TZM-BL' and temperature=37 and env not like 'PG%'";
 sets = pr.selectSetsWith(wheres);
 wheres = sets[['experiment_id','set_id']];
 sams = pr.selectSamsWhere(wheres);
@@ -176,7 +176,7 @@ tables = {
     'samples'           : 'TOAD96W_SAMPLES',
     'processed_samples' : 'TOAD96W_SAMPLES_PROCESSED',
     'processed_sets'    : 'TOAD96W_SETS_PROCESSED',
-    'fits'              : 'TOAD06W_FITS',
+    'fits'              : 'TOAD96W_FITS',
 };
 # output
 outfile = os.path.join(myroot, args.out+"."+args.format);
