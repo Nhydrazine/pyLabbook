@@ -894,6 +894,8 @@ class pyLabbookManagerApp(tk.Tk):
             int: lambda x: intformat(x),
             float: lambda x: floatformat(x),
             bool: lambda x: boolformat(x),
+            np.float64: lambda x: floatformat(x),
+            np.int64: lambda x: intformat(x),
         };
 
         # build column specs
